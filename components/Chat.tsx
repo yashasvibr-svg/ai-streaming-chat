@@ -25,7 +25,7 @@ export default function Chat() {
 
     const text = input.trim();
 
-    if (!text || status === "submitted" || status === "streaming") {
+    if (!text || isLoading) {
       return;
     }
 
@@ -34,20 +34,6 @@ export default function Chat() {
     });
 
     setInput("");
-  };
-
-  const handleKeyDown = (
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-
-      const form = e.currentTarget.form;
-
-      if (form) {
-        form.requestSubmit();
-      }
-    }
   };
 
   const isLoading =
@@ -59,14 +45,12 @@ export default function Chat() {
 
         {/* Header */}
         <header className="chat-header">
-          <div className="brand">
+          <div className="header-left">
             <div className="ai-logo">AI</div>
 
             <div>
               <h1>AI Streaming Chat</h1>
-              <p>
-                Your intelligent AI assistant
-              </p>
+              <p>Your intelligent AI assistant</p>
             </div>
           </div>
 
@@ -77,61 +61,31 @@ export default function Chat() {
         </header>
 
         {/* Chat area */}
-        <section className="chat-area">
+        <section className="chat-body">
 
           {/* Empty state */}
           {messages.length === 0 && (
             <div className="empty-state">
+              <div className="empty-icon">✨</div>
 
-              <div className="welcome-icon">
-                ✨
-              </div>
-
-              <h2>
-                How can I help you?
-              </h2>
+              <h2>Start a conversation</h2>
 
               <p>
-                Ask me anything about programming,
-                technology, projects, or learning.
+                Ask me anything and watch the response
+                stream in real time.
               </p>
 
-              <div className="suggestions">
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setInput(
-                      "Explain React hooks in simple terms"
-                    )
-                  }
-                >
-                  ⚛️ React Hooks
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setInput(
-                      "Explain JavaScript promises with an example"
-                    )
-                  }
-                >
-                  💻 JavaScript
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setInput(
-                      "Give me some beginner programming project ideas"
-                    )
-                  }
-                >
-                  🚀 Project Ideas
-                </button>
-
-              </div>
+              <button
+                type="button"
+                className="example-button"
+                onClick={() =>
+                  setInput(
+                    "Explain React hooks in simple terms"
+                  )
+                }
+              >
+                Try an example
+              </button>
             </div>
           )}
 
@@ -148,29 +102,21 @@ export default function Chat() {
                 }`}
               >
 
-                {/* Avatar */}
+                {/* AI avatar */}
+                {message.role === "assistant" && (
+                  <div className="message-avatar">
+                    AI
+                  </div>
+                )}
+
                 <div
-                  className={`message-avatar ${
+                  className={`message ${
                     message.role === "user"
-                      ? "user-avatar"
-                      : "ai-avatar"
+                      ? "user-message"
+                      : "assistant-message"
                   }`}
                 >
-                  {message.role === "user"
-                    ? "Y"
-                    : "AI"}
-                </div>
-
-                {/* Message */}
-                <div
-                  className={`message-bubble ${
-                    message.role === "user"
-                      ? "user-bubble"
-                      : "assistant-bubble"
-                  }`}
-                >
-
-                  <div className="message-name">
+                  <div className="message-label">
                     {message.role === "user"
                       ? "You"
                       : "AI Assistant"}
@@ -191,22 +137,26 @@ export default function Chat() {
                       }
                     )}
                   </div>
-
                 </div>
+
+                {/* User avatar */}
+                {message.role === "user" && (
+                  <div className="message-avatar user-avatar">
+                    Y
+                  </div>
+                )}
               </div>
             ))}
 
-            {/* Streaming indicator */}
+            {/* Loading indicator */}
             {status === "submitted" && (
               <div className="message-row assistant-row">
-
-                <div className="message-avatar ai-avatar">
+                <div className="message-avatar">
                   AI
                 </div>
 
-                <div className="message-bubble assistant-bubble">
-
-                  <div className="message-name">
+                <div className="message assistant-message">
+                  <div className="message-label">
                     AI Assistant
                   </div>
 
@@ -215,7 +165,6 @@ export default function Chat() {
                     <span></span>
                     <span></span>
                   </div>
-
                 </div>
               </div>
             )}
@@ -223,33 +172,27 @@ export default function Chat() {
             {/* Error */}
             {error && (
               <div className="error-box">
-
-                <div className="error-icon">
-                  !
-                </div>
-
                 <div className="error-content">
                   <strong>
                     Something went wrong
                   </strong>
 
                   <p>
-                    The AI response could not be
-                    completed. Please try again.
+                    The response could not be completed.
+                    Please try again.
                   </p>
-
-                  <button
-                    type="button"
-                    onClick={() => regenerate()}
-                    disabled={isLoading}
-                  >
-                    ↻ Try again
-                  </button>
                 </div>
 
+                <button
+                  type="button"
+                  onClick={() => regenerate()}
+                  disabled={isLoading}
+                  className="retry-button"
+                >
+                  Try again
+                </button>
               </div>
             )}
-
           </div>
         </section>
 
@@ -260,45 +203,41 @@ export default function Chat() {
             onSubmit={handleSubmit}
             className="chat-form"
           >
-
             <input
               type="text"
               value={input}
               onChange={(e) =>
                 setInput(e.target.value)
               }
-              onKeyDown={handleKeyDown}
               placeholder="Message your AI assistant..."
               disabled={isLoading}
               aria-label="Chat message"
             />
 
+            {/* Stop button while generating */}
             {isLoading ? (
               <button
                 type="button"
-                className="stop-button"
                 onClick={() => stop()}
+                className="stop-button"
               >
                 ■ Stop
               </button>
             ) : (
               <button
                 type="submit"
-                className="send-button"
                 disabled={!input.trim()}
+                className="send-button"
               >
-                Send
-                <span>➤</span>
+                Send ➤
               </button>
             )}
-
           </form>
 
           <p className="input-hint">
             Press Enter to send • Your AI response
             streams in real time
           </p>
-
         </div>
 
         {/* Footer */}
