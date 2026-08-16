@@ -10,7 +10,8 @@ import { google } from "@ai-sdk/google";
 // Change this to true ONLY when testing the 429 error.
 // Keep it false for the final project.
 // --------------------------------------------------
-const TEST_RATE_LIMIT = true;
+const TEST_RATE_LIMIT = false;
+const TEST_MID_STREAM=false;
 
 export async function POST(req: Request) {
   try {
@@ -66,17 +67,23 @@ export async function POST(req: Request) {
     // ----------------------------------------------
     // Stream Gemini response
     // ----------------------------------------------
-    const result = streamText({
-      model: google("gemini-3.6-flash"),
+   const result = streamText({
+  model: google("gemini-3.6-flash"),
 
-      system:
-        "You are a helpful AI assistant. " +
-        "Explain concepts clearly and simply. " +
-        "When the user asks programming questions, " +
-        "give accurate examples and step-by-step explanations.",
+  system:
+    "You are a helpful AI assistant. " +
+    "Explain concepts clearly and simply. " +
+    "When the user asks programming questions, " +
+    "give accurate examples and step-by-step explanations.",
 
-      messages: modelMessages,
-    });
+  messages: modelMessages,
+
+  onFinish: async () => {
+    if (TEST_MID_STREAM) {
+      console.log("MID-STREAM TEST: response completed");
+    }
+  },
+});
 
     // ----------------------------------------------
     // Return streaming response
